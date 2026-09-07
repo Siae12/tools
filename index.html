@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>웹 도구</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect x='14' y='14' width='44' height='44' rx='8' fill='%236a4c93'/%3E%3Crect x='70' y='14' width='44' height='44' rx='8' fill='%232e7d32'/%3E%3Crect x='14' y='70' width='44' height='44' rx='8' fill='%231565c0'/%3E%3Crect x='70' y='70' width='44' height='44' rx='8' fill='%23ef6c00'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --app: #f5f7fa;
+    --panel: #ffffff;
+    --line: #cfd8dc;
+    --head: #546e7a;
+    --value: #263238;
+    --muted: #607d8b;
+    --btn: #eceff1;
+    --btn-hover: #dde3e7;
+    --accent: #6a4c93;
+  }
+  :root[data-theme="dark"] {
+    --app: #1e2024;
+    --panel: #24262b;
+    --line: #3a3f47;
+    --head: #97a2ad;
+    --value: #e8eaed;
+    --muted: #a7b0b9;
+    --btn: #33373d;
+    --btn-hover: #41464e;
+    --accent: #c2a6f5;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    padding: 20px 16px max(20px, env(safe-area-inset-bottom));
+    background: var(--app);
+    color: var(--value);
+    font-family: "Malgun Gothic", "맑은 고딕", -apple-system, "Noto Sans KR", sans-serif;
+    font-size: 14px;
+  }
+  .wrap { max-width: 560px; margin: 0 auto; }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  h1 { margin: 0; font-size: 18px; }
+  .btn {
+    font: inherit;
+    font-size: 12.5px;
+    padding: 6px 12px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: var(--btn);
+    color: var(--value);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--btn-hover); }
+
+  a.card, div.card {
+    display: block;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+    text-decoration: none;
+    color: inherit;
+  }
+  a.card:hover { border-color: var(--accent); }
+  .card h2 { margin: 0 0 4px; font-size: 15px; }
+  .card p { margin: 0; font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+  .card.soon { opacity: .55; }
+  .tag {
+    float: right;
+    font-size: 11px;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1px 8px;
+  }
+  footer { margin-top: 18px; font-size: 11.5px; color: var(--muted); text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>웹 도구</h1>
+    <button class="btn" id="theme" type="button">☾ 다크</button>
+  </header>
+
+  <a class="card" href="rp.html">
+    <h2>RP 출력 자수 분석기</h2>
+    <p>붙여넣은 RP 출력을 이미지 · 시스템 · 화자태그 · 본문으로 갈라 글자 수와 비중을 셉니다.</p>
+  </a>
+
+  <div class="card soon">
+    <span class="tag">준비 중</span>
+    <h2>점수-피해량 비교기</h2>
+    <p>점수를 넣으면 피해량으로 환산하고 곡선 위에 여러 값을 얹어 비교합니다.</p>
+  </div>
+
+  <div class="card soon">
+    <span class="tag">준비 중</span>
+    <h2>황칩 필요 갯수 계산</h2>
+    <p>옵션과 수치를 고르면 필요한 황칩 합계를 계산합니다.</p>
+  </div>
+
+  <footer>입력한 내용은 이 기기 밖으로 나가지 않습니다.</footer>
+</div>
+
+<script>
+"use strict";
+const KEY = "web-tools-theme";
+const media = window.matchMedia("(prefers-color-scheme: dark)");
+const btn = document.getElementById("theme");
+
+function applyTheme(mode) {
+  document.documentElement.dataset.theme = mode;
+  btn.textContent = mode === "dark" ? "☀ 라이트" : "☾ 다크";
+}
+
+let stored = null;
+try { stored = localStorage.getItem(KEY); } catch (e) { /* 저장 못 해도 동작 */ }
+applyTheme(stored || (media.matches ? "dark" : "light"));
+
+media.addEventListener("change", e => {
+  let saved = null;
+  try { saved = localStorage.getItem(KEY); } catch (e2) { /* 무시 */ }
+  if (!saved) applyTheme(e.matches ? "dark" : "light");
+});
+
+btn.addEventListener("click", () => {
+  const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  applyTheme(next);
+  try { localStorage.setItem(KEY, next); } catch (e) { /* 무시 */ }
+});
+</script>
+</body>
+</html>

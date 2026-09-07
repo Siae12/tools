@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RP 출력 자수 분석기</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect x='20' y='10' width='88' height='110' rx='9' fill='%23fff' stroke='%23789098' stroke-width='4'/%3E%3Cpath d='M20 19a9 9 0 0 1 9-9h70a9 9 0 0 1 9 9v11H20z' fill='%236a4c93'/%3E%3Cg fill='%23b0bec5'%3E%3Crect x='32' y='48' width='66' height='7' rx='3.5'/%3E%3Crect x='32' y='63' width='58' height='7' rx='3.5'/%3E%3Crect x='32' y='78' width='66' height='7' rx='3.5'/%3E%3C/g%3E%3Cg%3E%3Crect x='32' y='94' width='22' height='14' fill='%232e7d32'/%3E%3Crect x='54' y='94' width='11' height='14' fill='%23ef6c00'/%3E%3Crect x='65' y='94' width='12' height='14' fill='%231565c0'/%3E%3Crect x='77' y='94' width='21' height='14' fill='%236a4c93'/%3E%3C/g%3E%3C/svg%3E">
+<style>
+  :root {
+    --app: #ffffff;
+    --panel: #ffffff;
+    --row-a: #ffffff;
+    --row-b: #f5f7fa;
+    --total: #eceff1;
+    --bar: #e3e6ea;
+    --line: #cfd8dc;
+    --head: #546e7a;
+    --value: #263238;
+    --muted: #607d8b;
+    --total-fg: #263238;
+    --total-sub: #455a64;
+    --text-bg: #ffffff;
+    --text-fg: #263238;
+    --sel-bg: #b3d4fc;
+    --btn: #eceff1;
+    --btn-hover: #dde3e7;
+
+    --img: #2e7d32;
+    --sys: #ef6c00;
+    --tag: #1565c0;
+    --body: #6a4c93;
+    --img-bg: #c8e6c9;
+    --sys-bg: #ffe0b2;
+    --tag-bg: #bbdefb;
+  }
+  :root[data-theme="dark"] {
+    --app: #1e2024;
+    --panel: #24262b;
+    --row-a: #24262b;
+    --row-b: #292c32;
+    --total: #2f333a;
+    --bar: #3b4048;
+    --line: #3a3f47;
+    --head: #97a2ad;
+    --value: #e8eaed;
+    --muted: #a7b0b9;
+    --total-fg: #f1f3f5;
+    --total-sub: #b8c1c9;
+    --text-bg: #1a1c1f;
+    --text-fg: #e8eaed;
+    --sel-bg: #34527d;
+    --btn: #33373d;
+    --btn-hover: #41464e;
+
+    --img: #7fd68b;
+    --sys: #f2a35c;
+    --tag: #79b8ff;
+    --body: #c2a6f5;
+    --img-bg: #22402a;
+    --sys-bg: #46331d;
+    --tag-bg: #1d3350;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--app);
+    color: var(--value);
+    font-family: "Malgun Gothic", "맑은 고딕", -apple-system, "Noto Sans KR", sans-serif;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+
+  /* ── 입력 ── */
+  .editor {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 200px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--text-bg);
+    overflow: hidden;
+  }
+  .editor > * {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 10px 12px;
+    font: 15px/1.6 "Malgun Gothic", "맑은 고딕", -apple-system, "Noto Sans KR", sans-serif;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    border: 0;
+    overflow-y: auto;
+  }
+  #paint {
+    color: transparent;
+    pointer-events: none;
+    user-select: none;
+  }
+  #input {
+    background: transparent;
+    color: var(--text-fg);
+    caret-color: var(--text-fg);
+    resize: none;
+    outline: none;
+    -webkit-text-fill-color: var(--text-fg);
+  }
+  #input::selection { background: var(--sel-bg); }
+  #input::placeholder { color: var(--muted); -webkit-text-fill-color: var(--muted); }
+  .m { border-radius: 2px; }
+  .m-img  { background: var(--img-bg); }
+  .m-sys  { background: var(--sys-bg); }
+  .m-tag  { background: var(--tag-bg); }
+
+  /* ── 결과 ── */
+  .result {
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--panel);
+    flex: 0 0 auto;
+  }
+  .result-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 10px 6px;
+  }
+  .result-head h1 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--head);
+  }
+  .btn {
+    font: inherit;
+    font-size: 12.5px;
+    padding: 5px 11px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: var(--btn);
+    color: var(--value);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--btn-hover); }
+  .btn:active { transform: translateY(1px); }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--head);
+    text-align: right;
+    padding: 2px 8px 6px;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  thead th:first-child, thead th:last-child { text-align: left; }
+  tbody td {
+    padding: 6px 8px;
+    text-align: right;
+    white-space: nowrap;
+  }
+  tbody tr:nth-child(odd) td { background: var(--row-a); }
+  tbody tr:nth-child(even) td { background: var(--row-b); }
+  .name {
+    text-align: left;
+    font-weight: 700;
+    padding-left: 10px !important;
+  }
+  .chip {
+    display: inline-block;
+    width: 11px; height: 11px;
+    margin-right: 7px;
+    vertical-align: -1px;
+    border: 1px solid currentColor;
+    border-radius: 2px;
+  }
+  .num { font-size: 15px; font-weight: 700; color: var(--value); }
+  .sub { color: var(--muted); }
+  .pct { font-weight: 700; }
+  .barcell { width: 45%; padding-right: 12px !important; }
+  .track {
+    height: 10px;
+    border-radius: 5px;
+    background: var(--bar);
+    overflow: hidden;
+    display: flex;
+  }
+  .track > i { display: block; height: 100%; }
+  tfoot td {
+    background: var(--total);
+    color: var(--total-fg);
+    font-weight: 700;
+    padding: 8px;
+    text-align: right;
+    border-top: 1px solid var(--line);
+  }
+  tfoot td:first-child { text-align: left; padding-left: 22px; }
+  tfoot .sub { color: var(--total-sub); }
+  .cat-이미지 .chip { background: var(--img-bg); }
+  .cat-시스템 .chip { background: var(--sys-bg); }
+  .cat-화자태그 .chip { background: var(--tag-bg); }
+  .cat-본문 .chip { background: var(--text-bg); }
+  .cat-이미지 { color: var(--img); }
+  .cat-시스템 { color: var(--sys); }
+  .cat-화자태그 { color: var(--tag); }
+  .cat-본문 { color: var(--body); }
+
+  .hint {
+    margin: 0;
+    font-size: 11.5px;
+    color: var(--muted);
+    text-align: center;
+  }
+  .hint a { color: inherit; }
+
+  .mobilebar { display: none; padding: 0 6px 8px; }
+  .mobilebar .track { height: 8px; }
+
+  /* ── 좁은 화면: 막대를 표에서 빼고 아래 한 줄로 내린다 ── */
+  @media (max-width: 560px) {
+    body { padding: 8px; font-size: 13px; }
+    .barcell, thead th:last-child { display: none; }
+    .name { padding-left: 8px !important; }
+    tfoot td:first-child { padding-left: 12px; }
+    .num { font-size: 14px; }
+    tbody td, tfoot td { padding: 7px 6px; }
+    .mobilebar { display: block; }
+  }
+</style>
+</head>
+<body>
+
+<div class="editor">
+  <pre id="paint" aria-hidden="true"></pre>
+  <textarea id="input" spellcheck="false" autocapitalize="off" autocomplete="off"
+            placeholder="RP 출력을 여기에 붙여넣으세요."></textarea>
+</div>
+
+<section class="result">
+  <div class="result-head">
+    <h1>분석 결과</h1>
+    <button class="btn" id="theme" type="button">☾ 다크</button>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>구분</th><th>글자 수</th><th>공백 제외</th><th>비중</th><th></th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+    <tfoot>
+      <tr>
+        <td>합계</td>
+        <td id="t-chars">0</td>
+        <td class="sub" id="t-nospace">0</td>
+        <td class="sub">100.0%</td>
+        <td class="barcell"><div class="track" id="t-track"></div></td>
+      </tr>
+    </tfoot>
+  </table>
+  <div class="mobilebar"><div class="track" id="m-track"></div></div>
+</section>
+
+<p class="hint">붙여넣으면 바로 계산됩니다. 입력한 내용은 이 기기 밖으로 나가지 않습니다.</p>
+
+<script>
+"use strict";
+
+/* ───────── 분류 정의 — 데스크톱 도구와 같은 순서·같은 규칙 ─────────
+   앞 패턴이 잡은 구간은 뒤 패턴이 덮어쓰지 않는다. */
+const CATS = ["이미지", "시스템", "화자태그", "본문"];
+const CLS = { "이미지": "m-img", "시스템": "m-sys", "화자태그": "m-tag" };
+
+const PATTERNS = [
+  // 1) 시스템 블록 — 안에 이미지·태그가 있어도 통째로 시스템으로 본다
+  ["시스템", /<div[^>]*display\s*:\s*none[\s\S]*?<\/div>/gi],
+  ["시스템", /<details>[\s\S]*?<\/details>/gi],
+  ["시스템", /```info[\s\S]*?```/gi],
+  ["시스템", /```[\s\S]*?```/g],
+  // 2) 이미지 — 마크다운과 {{img::...}} 두 표기
+  ["이미지", /!\[[^\]]*\]\([^)]*\)/g],
+  ["이미지", /\{\{\s*img\s*::[^{}]*\}\}/gi],
+  // 3) 화자 태그
+  ["화자태그", /<<[^<>\n]+>>/g],
+];
+
+function classify(text) {
+  const marks = new Array(text.length).fill("본문");
+  const taken = new Array(text.length).fill(false);
+
+  for (const [name, re] of PATTERNS) {
+    re.lastIndex = 0;
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      if (m[0].length === 0) { re.lastIndex++; continue; }
+      const s = m.index, e = s + m[0].length;
+      let clash = false;
+      for (let i = s; i < e; i++) if (taken[i]) { clash = true; break; }
+      if (clash) continue;
+      for (let i = s; i < e; i++) { marks[i] = name; taken[i] = true; }
+    }
+  }
+  return marks;
+}
+
+function analyze(text) {
+  const marks = classify(text);
+  const stats = {};
+  for (const c of CATS) stats[c] = { chars: 0, nospace: 0 };
+  let total = 0, totalNospace = 0;
+
+  // 이모지처럼 두 칸을 쓰는 문자도 한 글자로 센다 (파이썬 len 과 같게)
+  for (let i = 0; i < text.length; ) {
+    const ch = String.fromCodePoint(text.codePointAt(i));
+    const cat = marks[i];
+    const blank = /\s/.test(ch);
+    stats[cat].chars += 1;
+    total += 1;
+    if (!blank) { stats[cat].nospace += 1; totalNospace += 1; }
+    i += ch.length;
+  }
+  return { marks, stats, total, totalNospace };
+}
+
+/* ───────── 화면 ───────── */
+const input = document.getElementById("input");
+const paint = document.getElementById("paint");
+const rowsEl = document.getElementById("rows");
+const fmt = n => n.toLocaleString("ko-KR");
+
+const rows = {};
+for (const cat of CATS) {
+  const tr = document.createElement("tr");
+  tr.innerHTML =
+    `<td class="name cat-${cat}"><span class="chip"></span>${cat}</td>` +
+    `<td class="num"></td><td class="sub"></td>` +
+    `<td class="pct cat-${cat}"></td>` +
+    `<td class="barcell"><div class="track"><i></i></div></td>`;
+  rowsEl.appendChild(tr);
+  rows[cat] = {
+    chars: tr.children[1], nospace: tr.children[2],
+    pct: tr.children[3], bar: tr.querySelector(".track > i"),
+  };
+  rows[cat].bar.style.background = `var(--${
+    { "이미지": "img", "시스템": "sys", "화자태그": "tag", "본문": "body" }[cat]})`;
+}
+
+const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+function highlight(text, marks) {
+  let out = "", i = 0;
+  while (i < text.length) {
+    const cat = marks[i];
+    let j = i;
+    while (j < text.length && marks[j] === cat) j++;
+    const chunk = esc(text.slice(i, j));
+    out += cat === "본문" ? chunk : `<span class="m ${CLS[cat]}">${chunk}</span>`;
+    i = j;
+  }
+  return out + "\n";        // 마지막 줄 높이를 textarea 와 맞춘다
+}
+
+function stack(el, stats, total) {
+  el.innerHTML = "";
+  if (!total) return;
+  for (const cat of CATS) {
+    const w = stats[cat].chars / total * 100;
+    if (w <= 0) continue;
+    const i = document.createElement("i");
+    i.style.width = w + "%";
+    i.style.background = `var(--${
+      { "이미지": "img", "시스템": "sys", "화자태그": "tag", "본문": "body" }[cat]})`;
+    el.appendChild(i);
+  }
+}
+
+function refresh() {
+  const text = input.value;
+  const { marks, stats, total, totalNospace } = analyze(text);
+
+  paint.innerHTML = highlight(text, marks);
+
+  for (const cat of CATS) {
+    const r = rows[cat];
+    const ratio = total ? stats[cat].chars / total * 100 : 0;
+    r.chars.textContent = fmt(stats[cat].chars);
+    r.nospace.textContent = fmt(stats[cat].nospace);
+    r.pct.textContent = ratio.toFixed(1) + "%";
+    r.bar.style.width = ratio + "%";
+  }
+  document.getElementById("t-chars").textContent = fmt(total);
+  document.getElementById("t-nospace").textContent = fmt(totalNospace);
+  stack(document.getElementById("t-track"), stats, total);
+  stack(document.getElementById("m-track"), stats, total);
+}
+
+input.addEventListener("input", refresh);
+input.addEventListener("scroll", () => { paint.scrollTop = input.scrollTop; });
+
+/* ───────── 테마 ─────────
+   고른 값이 있으면 그것을, 없으면 기기 설정을 따른다. */
+const KEY = "rp-counter-theme";
+const media = window.matchMedia("(prefers-color-scheme: dark)");
+const btn = document.getElementById("theme");
+
+function applyTheme(mode) {
+  document.documentElement.dataset.theme = mode;
+  btn.textContent = mode === "dark" ? "☀ 라이트" : "☾ 다크";
+}
+
+let stored = null;
+try { stored = localStorage.getItem(KEY); } catch (e) { /* 저장 못 해도 동작 */ }
+applyTheme(stored || (media.matches ? "dark" : "light"));
+
+media.addEventListener("change", e => {
+  let saved = null;
+  try { saved = localStorage.getItem(KEY); } catch (e2) { /* 무시 */ }
+  if (!saved) applyTheme(e.matches ? "dark" : "light");
+});
+
+btn.addEventListener("click", () => {
+  const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  applyTheme(next);
+  try { localStorage.setItem(KEY, next); } catch (e) { /* 무시 */ }
+});
+
+refresh();
+</script>
+</body>
+</html>
